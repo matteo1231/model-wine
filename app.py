@@ -2,6 +2,7 @@
 import streamlit as st
 import joblib
 import numpy as np
+import pandas as pd
 
 # Load artifacts
 model = joblib.load('wine_model.joblib')
