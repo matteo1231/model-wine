@@ -35,29 +35,48 @@ with st.form("wine_input"):
 
 # Prediction logic
 if submitted:
-    # Create input array with correct feature order
-    input_array = np.array([inputs[col] for col in feature_columns if col != 'is_good']).reshape(1, -1)
+    # Debug: Show what inputs we have
+    st.write("User inputs:", inputs)
     
-    # Handle missing values (if any)
-    input_imputed = imputer.transform(input_array)
+    # Create DataFrame to ensure proper feature ordering
+    input_df = pd.DataFrame([inputs])
     
-    # Make prediction
-    pred = model.predict(input_imputed)[0]
-    proba = model.predict_proba(input_imputed)[0]
-    
-    # Display results
-    st.subheader("Prediction Result")
-    if pred == 1:
-        st.success(f"✅ **Good Quality** (Confidence: {proba[1]:.1%})")
-        st.markdown("This wine meets our premium standards!")
-    else:
-        st.error(f"❌ **Not Good Quality** (Confidence: {proba[0]:.1%})")
-        st.markdown("Does not meet premium quality threshold")
-    
-    # Confidence visualization
-    st.progress(proba[1])
-    st.caption(f"Probability of being 'Good Quality': {proba[1]:.1%}")
-
+    # Reorder columns to exactly match training data
+    try:
+        # Ensure we only keep features the model expects (excluding 'is_good' if present)
+        model_features = [col for col in feature_columns if col != 'is_good']
+        input_df = input_df[model_features]
+        
+        # Debug: Show final features being sent to model
+        st.write("Features being sent to model:", input_df.columns.tolist())
+        
+        # Convert to numpy array
+        input_array = input_df.values
+        
+        # Handle missing values
+        input_imputed = imputer.transform(input_array)
+        
+        # Make prediction
+        pred = model.predict(input_imputed)[0]
+        proba = model.predict_proba(input_imputed)[0]
+        
+        # Display results
+        st.subheader("Prediction Result")
+        if pred == 1:
+            st.success(f"✅ **Good Quality** (Confidence: {proba[1]:.1%})")
+            st.markdown("This wine meets our premium standards!")
+        else:
+            st.error(f"❌ **Not Good Quality** (Confidence: {proba[0]:.1%})")
+            st.markdown("Does not meet premium quality threshold")
+        
+        st.progress(proba[1])
+        st.caption(f"Probability of being 'Good Quality': {proba[1]:.1%}")
+        
+    except Exception as e:
+        st.error(f"Prediction failed: {str(e)}")
+        st.write("Feature mismatch details:")
+        st.write(f"Model expects: {model_features}")
+        st.write(f"Received: {input_df.columns.tolist()}")
 # Sidebar info
 st.sidebar.header("About")
 st.sidebar.info("""
