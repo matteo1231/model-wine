@@ -9,6 +9,14 @@ model = joblib.load('wine_model.joblib')
 imputer = joblib.load('imputer.joblib')
 feature_columns = joblib.load('feature_columns.joblib')
 
+# Verify loaded feature columns (debug)
+expected_features = [
+    'fixed acidity', 'volatile acidity', 'citric acid',
+    'residual sugar', 'chlorides', 'free sulfur dioxide',
+    'total sulfur dioxide', 'density', 'pH',
+    'sulphates', 'alcohol'
+]
+
 st.title("🍷 Premium Wine Quality Classifier")
 st.subheader("Predict if wine meets premium standards (7+ rating)")
 
@@ -36,23 +44,13 @@ with st.form("wine_input"):
 
 # Prediction logic
 if submitted:
-    # Debug: Show what inputs we have
-    st.write("User inputs:", inputs)
-    
-    # Create DataFrame to ensure proper feature ordering
-    input_df = pd.DataFrame([inputs])
-    
-    # Reorder columns to exactly match training data
     try:
-        # Ensure we only keep features the model expects (excluding 'is_good' if present)
-        model_features = [col for col in feature_columns if col != 'is_good']
-        input_df = input_df[model_features]
+        # Create array with EXACTLY 11 features in correct order
+        input_array = np.array([[inputs[col] for col in expected_features]])
         
-        # Debug: Show final features being sent to model
-        st.write("Features being sent to model:", input_df.columns.tolist())
-        
-        # Convert to numpy array
-        input_array = input_df.values
+        # Debug info
+        st.write("Input shape:", input_array.shape)
+        st.write("Features used:", expected_features)
         
         # Handle missing values
         input_imputed = imputer.transform(input_array)
@@ -75,9 +73,10 @@ if submitted:
         
     except Exception as e:
         st.error(f"Prediction failed: {str(e)}")
-        st.write("Feature mismatch details:")
-        st.write(f"Model expects: {model_features}")
-        st.write(f"Received: {input_df.columns.tolist()}")
+        st.write("Debug info:")
+        st.write(f"Expected features: {expected_features}")
+        st.write(f"Loaded features: {feature_columns}")
+
 # Sidebar info
 st.sidebar.header("About")
 st.sidebar.info("""

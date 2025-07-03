@@ -10,20 +10,23 @@ from sklearn.model_selection import train_test_split
 import joblib
 
 # Load and preprocess data
-df = pd.read_csv('winequality-red.csv')
+df = pd.read_csv('winequality-red.csv')  # Explicit delimiter
 
 # Convert quality to binary classification
 df['is_good'] = df['quality'].apply(lambda x: 1 if x >= 7 else 0)
-df = df.drop('quality', axis=1)
 
-# Handle missing values with MICE imputation
+# Separate features and target BEFORE imputation
+X = df.drop(['quality', 'is_good'], axis=1)  # Features only
+y = df['is_good']  # Target
+
+# Handle missing values with MICE imputation (features only)
 imputer = IterativeImputer(random_state=42)
-df_imputed = pd.DataFrame(imputer.fit_transform(df), columns=df.columns)
+X_imputed = pd.DataFrame(imputer.fit_transform(X), columns=X.columns)
 
 # Train-test split
-X = df_imputed.drop('is_good', axis=1)
-y = df_imputed['is_good']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X_imputed, y, test_size=0.2, random_state=42
+)
 
 # Create pipeline with scaling and classifier
 model = Pipeline([
@@ -41,4 +44,9 @@ model.fit(X_train, y_train)
 # Save artifacts
 joblib.dump(model, 'wine_model.joblib')
 joblib.dump(imputer, 'imputer.joblib')
-joblib.dump(X.columns, 'feature_columns.joblib')
+joblib.dump(X.columns, 'feature_columns.joblib')  # Feature names only
+
+print("Model training complete! Artifacts saved:")
+print(f"- wine_model.joblib (Model)")
+print(f"- imputer.joblib (Imputer for {X.shape[1]} features)")
+print(f"- feature_columns.joblib (Feature names)")
