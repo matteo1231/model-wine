@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 import joblib
 
 # Load and preprocess data
-df = pd.read_csv('winequality-red.csv')  # Explicit delimiter
+df = pd.read_csv('winequality-red.csv', delimiter=';')  # Explicit delimiter
 
 # Convert quality to binary classification
 df['is_good'] = df['quality'].apply(lambda x: 1 if x >= 7 else 0)
