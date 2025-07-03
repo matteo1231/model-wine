@@ -11,7 +11,7 @@ from sklearn.metrics import classification_report
 import joblib
 
 # Load and preprocess data
-df = pd.read_csv('winequality-red.csv', sep=';')  # MUST use semicolon delimiter
+df = pd.read_csv('winequality-red.csv', sep=',')  # MUST use semicolon delimiter
 
 # Convert quality to binary classification
 df['is_good'] = df['quality'].apply(lambda x: 1 if x >= 7 else 0)
